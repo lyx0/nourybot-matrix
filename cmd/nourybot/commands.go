@@ -63,9 +63,14 @@ func (app *Application) ParseCommand(evt *event.Event) {
 
 	case "phonetic":
 		if msgLen == 1 {
-			resp := commands.PhoneticExplanation()
-			app.SendText(evt, resp)
-			return
+			if resp, err := commands.Help(commandName); err != nil {
+				app.Log.Error().Err(err).Msg("failed to handle help->phonetic command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
 		} else {
 			msg := evt.Content.AsMessage().Body[9:len(evt.Content.AsMessage().Body)]
 			if resp, err := commands.Phonetic(msg); err != nil {

@@ -73,18 +73,6 @@ var cm = map[string]string{
 	"M": "М",
 }
 
-func PhoneticExplanation() string {
-	// This might look like complete ass depending on the
-	// matrix clients font. Looks fine on my Element client.
-	help := `
-| Ё | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 | - | Ъ |
-     | Я | Ш | Е | Р | Т | Ы | У | И | О | П | Ю | Щ | Э |
-       | А | С | Д | Ф | Г | Ч | Й | К | Л | Ь | Ж |
-           | З | Х | Ц | В | Б | Н | М | ; | : |
-	`
-	return help
-}
-
 func Phonetic(message string) (string, error) {
 	var ts string
 
