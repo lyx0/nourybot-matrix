@@ -71,5 +71,21 @@ func (app *Application) ParseCommand(evt *event.Event) {
 				return
 			}
 		}
+
+	case "weather":
+		if msgLen < 2 {
+			app.SendText(evt, "Not enough arguments provided")
+			return
+		} else {
+			location := evt.Content.AsMessage().Body[9:len(evt.Content.AsMessage().Body)]
+			if resp, err := commands.Weather(location); err != nil {
+				app.Log.Error().Err(err).Msg("Failed to handle Weather command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
+		}
 	}
 }

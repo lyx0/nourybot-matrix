@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/briandowns/openweathermap v0.19.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
