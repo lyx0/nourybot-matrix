@@ -27,6 +27,11 @@ type config struct {
 	database         string
 }
 
+type Application struct {
+	Mc  *mautrix.Client
+	Log zerolog.Logger
+}
+
 var debug = flag.Bool("debug", false, "Enable debug logs")
 
 func main() {
@@ -64,29 +69,36 @@ func main() {
 
 	var lastRoomID id.RoomID
 
-	syncer := client.Syncer.(*mautrix.DefaultSyncer)
+	app := &Application{
+		Mc:  client,
+		Log: log,
+	}
+
+	syncer := app.Mc.Syncer.(*mautrix.DefaultSyncer)
 	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, evt *event.Event) {
 		lastRoomID = evt.RoomID
 		rl.SetPrompt(fmt.Sprintf("%s> ", lastRoomID))
-		log.Info().
+		app.Log.Info().
 			Str("sender", evt.Sender.String()).
 			Str("type", evt.Type.String()).
 			Str("id", evt.ID.String()).
 			Str("body", evt.Content.AsMessage().Body).
 			Msg("Received message")
+
+		app.ParseEvent(evt)
 	})
 	syncer.OnEventType(event.StateMember, func(source mautrix.EventSource, evt *event.Event) {
-		if evt.GetStateKey() == client.UserID.String() && evt.Content.AsMember().Membership == event.MembershipInvite {
-			_, err := client.JoinRoomByID(evt.RoomID)
+		if evt.GetStateKey() == app.Mc.UserID.String() && evt.Content.AsMember().Membership == event.MembershipInvite {
+			_, err := app.Mc.JoinRoomByID(evt.RoomID)
 			if err == nil {
 				lastRoomID = evt.RoomID
 				rl.SetPrompt(fmt.Sprintf("%s> ", lastRoomID))
-				log.Info().
+				app.Log.Info().
 					Str("room_id", evt.RoomID.String()).
 					Str("inviter", evt.Sender.String()).
 					Msg("Joined room after invite")
 			} else {
-				log.Error().Err(err).
+				app.Log.Error().Err(err).
 					Str("room_id", evt.RoomID.String()).
 					Str("inviter", evt.Sender.String()).
 					Msg("Failed to join room after invite")
@@ -94,7 +106,7 @@ func main() {
 		}
 	})
 
-	cryptoHelper, err := cryptohelper.NewCryptoHelper(client, []byte("meow"), cfg.database)
+	cryptoHelper, err := cryptohelper.NewCryptoHelper(app.Mc, []byte("meow"), cfg.database)
 	if err != nil {
 		panic(err)
 	}
@@ -110,15 +122,15 @@ func main() {
 		panic(err)
 	}
 
-	client.Crypto = cryptoHelper
+	app.Mc.Crypto = cryptoHelper
 
-	log.Info().Msg("Now running")
+	app.Log.Info().Msg("Now running")
 	syncCtx, cancelSync := context.WithCancel(context.Background())
 	var syncStopWait sync.WaitGroup
 	syncStopWait.Add(1)
 
 	go func() {
-		err = client.SyncWithContext(syncCtx)
+		err = app.Mc.SyncWithContext(syncCtx)
 		defer syncStopWait.Done()
 		if err != nil && !errors.Is(err, context.Canceled) {
 			panic(err)
@@ -131,20 +143,20 @@ func main() {
 			break
 		}
 		if lastRoomID == "" {
-			log.Error().Msg("Wait for an incoming message before sending messages")
+			app.Log.Error().Msg("Wait for an incoming message before sending messages")
 			continue
 		}
-		resp, err := client.SendText(lastRoomID, line)
+		resp, err := app.Mc.SendText(lastRoomID, line)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to send event")
+			app.Log.Error().Err(err).Msg("Failed to send event")
 		} else {
-			log.Info().Str("event_id", resp.EventID.String()).Msg("Event sent")
+			app.Log.Info().Str("event_id", resp.EventID.String()).Msg("Event sent")
 		}
 	}
 	cancelSync()
 	syncStopWait.Wait()
 	err = cryptoHelper.Close()
 	if err != nil {
-		log.Error().Err(err).Msg("Error closing database")
+		app.Log.Error().Err(err).Msg("Error closing database")
 	}
 }
