@@ -4,10 +4,12 @@ import (
 	"strings"
 
 	"github.com/lyx0/nourybot-matrix/internal/commands"
+	"github.com/lyx0/nourybot-matrix/internal/common"
 	"maunium.net/go/mautrix/event"
 )
 
 func (app *Application) ParseCommand(evt *event.Event) {
+	common.CommandUsed()
 	// commandName is the actual name of the command without the prefix.
 	// e.g. `!ping` would be `ping`.
 	commandName := strings.ToLower(strings.SplitN(evt.Content.AsMessage().Body, " ", 2)[0][1:])
