@@ -12,6 +12,7 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/joho/godotenv"
+	"github.com/lyx0/nourybot-matrix/internal/common"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"maunium.net/go/mautrix"
@@ -68,6 +69,8 @@ func main() {
 	client.Log = log
 
 	var lastRoomID id.RoomID
+
+	common.StartTime()
 
 	app := &Application{
 		Mc:  client,

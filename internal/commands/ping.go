@@ -8,6 +8,7 @@ import (
 
 func Ping() (string, error) {
 	n := common.GetCommandsUsed()
-	resp := fmt.Sprintf("Pong! Commands used: %v", n)
+	up := common.GetUptime()
+	resp := fmt.Sprintf("Pong! Commands used: %v Last restart: %v", n, up)
 	return resp, nil
 }
