@@ -8,7 +8,20 @@ import (
 )
 
 func (app *Application) ParseCommand(evt *event.Event) {
+	// commandName is the actual name of the command without the prefix.
+	// e.g. `!ping` would be `ping`.
 	commandName := strings.ToLower(strings.SplitN(evt.Content.AsMessage().Body, " ", 2)[0][1:])
+
+	// cmdParams are additional command parameters.
+	// e.g. `!weather san antonio`
+	// cmdParam[0] is `san` and cmdParam[1] = `antonio`.
+	cmdParams := strings.SplitN(evt.Content.AsMessage().Body, " ", 500)
+	app.Log.Info().Msgf("cmdParams: %s", cmdParams)
+
+	// msgLen is the amount of words in a message without the prefix.
+	// Useful to check if enough cmdParams are provided.
+	msgLen := len(strings.SplitN(evt.Content.AsMessage().Body, " ", -2))
+
 	app.Log.Info().Msgf("Command: %s", commandName)
 
 	switch commandName {
@@ -18,7 +31,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 
 	case "ping":
 		if resp, err := commands.Ping(); err != nil {
-			app.Log.Error().Err(err).Msg("Failed to send Ping")
+			app.Log.Error().Err(err).Msg("Failed to handle Ping command")
 			app.SendText(evt, "Something went wrong.")
 			return
 		} else {
@@ -26,14 +39,37 @@ func (app *Application) ParseCommand(evt *event.Event) {
 			return
 		}
 
+	case "random":
+		if msgLen == 2 && cmdParams[1] == "xkcd" {
+			if resp, err := commands.RandomXkcd(); err != nil {
+				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
+		}
+
 	case "xkcd":
-		if resp, err := commands.Xkcd(); err != nil {
-			app.Log.Error().Err(err).Msg("Failed to send Ping")
-			app.SendText(evt, "Something went wrong.")
-			return
-		} else {
-			app.SendText(evt, resp)
-			return
+		if msgLen == 2 && cmdParams[1] == "random" {
+			if resp, err := commands.RandomXkcd(); err != nil {
+				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
+		} else if msgLen == 1 {
+			if resp, err := commands.Xkcd(); err != nil {
+				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
 		}
 	}
 }
