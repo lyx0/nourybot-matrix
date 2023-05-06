@@ -5,11 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/chzyer/readline"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"maunium.net/go/mautrix"
@@ -18,21 +20,30 @@ import (
 	"maunium.net/go/mautrix/id"
 )
 
-var homeserver = flag.String("homeserver", "", "Matrix homeserver")
-var username = flag.String("username", "", "Matrix username localpart")
-var password = flag.String("password", "", "Matrix passsword")
-var database = flag.String("database", "mautrix-example.db", "SQLite database path")
+type config struct {
+	matrixHomeserver string
+	matrixUser       string
+	matrixPass       string
+	database         string
+}
+
 var debug = flag.Bool("debug", false, "Enable debug logs")
 
 func main() {
 	flag.Parse()
-	if *username == "" || *password == "" || *homeserver == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		flag.PrintDefaults()
-		os.Exit(1)
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env")
 	}
 
-	client, err := mautrix.NewClient(*homeserver, "", "")
+	var cfg config
+	cfg.matrixHomeserver = os.Getenv("MATRIX_HOMESERVER")
+	cfg.matrixUser = os.Getenv("MATRIX_USERNAME")
+	cfg.matrixPass = os.Getenv("MATRIX_PASSWORD")
+	cfg.database = os.Getenv("SQLITE_DATABASE")
+
+	client, err := mautrix.NewClient(cfg.matrixHomeserver, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -83,15 +94,15 @@ func main() {
 		}
 	})
 
-	cryptoHelper, err := cryptohelper.NewCryptoHelper(client, []byte("meow"), *database)
+	cryptoHelper, err := cryptohelper.NewCryptoHelper(client, []byte("meow"), cfg.database)
 	if err != nil {
 		panic(err)
 	}
 
 	cryptoHelper.LoginAs = &mautrix.ReqLogin{
 		Type:       mautrix.AuthTypePassword,
-		Identifier: mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: *username},
-		Password:   *password,
+		Identifier: mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: cfg.matrixUser},
+		Password:   cfg.matrixPass,
 	}
 
 	err = cryptoHelper.Init()
