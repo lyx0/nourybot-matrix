@@ -46,6 +46,21 @@ func (app *Application) ParseCommand(evt *event.Event) {
 			}
 		}
 
+	case "lastfm":
+		if msgLen == 1 {
+			app.SendText(evt, "Not enough arguments provided")
+			return
+		} else {
+			if resp, err := commands.LastFmUserRecent(cmdParams[1]); err != nil {
+				app.Log.Error().Err(err).Msg("failed to handle lastfm command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
+		}
+
 	case "phonetic":
 		msg := evt.Content.AsMessage().Body[9:len(evt.Content.AsMessage().Body)]
 		if resp, err := commands.Phonetic(msg); err != nil {
