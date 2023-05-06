@@ -4,4 +4,4 @@ cup:
 	sudo docker compose up
 
 xd:
-	go build -o ./bin/${BINARY_NAME} && ./bin/${BINARY_NAME} 
+	cd cmd/nourybot && go build -o ${BINARY_NAME} && ./${BINARY_NAME}
