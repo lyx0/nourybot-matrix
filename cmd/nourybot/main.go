@@ -78,14 +78,24 @@ func main() {
 	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, evt *event.Event) {
 		lastRoomID = evt.RoomID
 		rl.SetPrompt(fmt.Sprintf("%s> ", lastRoomID))
-		app.Log.Info().
-			Str("sender", evt.Sender.String()).
-			Str("type", evt.Type.String()).
-			Str("id", evt.ID.String()).
-			Str("body", evt.Content.AsMessage().Body).
-			Msg("Received message")
 
-		app.ParseEvent(evt)
+		// Filter out messages from the bot user account.
+		if evt.Sender.String() != fmt.Sprintf("@%s:%s", cfg.matrixUser, cfg.matrixHomeserver) {
+			app.Log.Info().
+				Str("sender", evt.Sender.String()).
+				Str("type", evt.Type.String()).
+				Str("id", evt.ID.String()).
+				Str("body", evt.Content.AsMessage().Body).
+				Msg("Received message")
+
+			if evt.Content.AsMessage().Body[:1] == "!" {
+				app.ParseCommand(evt)
+				return
+			} else {
+				app.ParseEvent(evt)
+				return
+			}
+		}
 	})
 	syncer.OnEventType(event.StateMember, func(source mautrix.EventSource, evt *event.Event) {
 		if evt.GetStateKey() == app.Mc.UserID.String() && evt.Content.AsMember().Membership == event.MembershipInvite {
