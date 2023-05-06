@@ -29,6 +29,21 @@ func (app *Application) ParseCommand(evt *event.Event) {
 		app.SendText(evt, "XD !")
 		return
 
+	case "currency":
+		if msgLen < 4 {
+			app.SendText(evt, "Not enough arguments provided")
+			return
+		} else {
+			if resp, err := commands.Currency(cmdParams[1], cmdParams[2], cmdParams[4]); err != nil {
+				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.SendText(evt, "Something went wrong.")
+				return
+			} else {
+				app.SendText(evt, resp)
+				return
+			}
+		}
+
 	case "ping":
 		if resp, err := commands.Ping(); err != nil {
 			app.Log.Error().Err(err).Msg("Failed to handle Ping command")

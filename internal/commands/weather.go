@@ -29,7 +29,7 @@ func Weather(location string) (string, error) {
 	// Longitude and Latitude are returned as 0 when the supplied location couldn't be
 	// assigned to a OpenWeatherMap location.
 	if w.GeoPos.Longitude == 0 && w.GeoPos.Latitude == 0 {
-		return "", ErrLocationNotFound
+		return "", ErrWeatherLocationNotFound
 	} else {
 		// Weather for Vilnius, LT: Feels like: 29.67°C. Currently 29.49°C with a high of 29.84°C and a low of 29.49°C, humidity: 45%, wind: 6.17m/s.
 		reply := fmt.Sprintf("Weather for %s, %s: Feels like: %v°C. Currently %v°C with a high of %v°C and a low of %v°C, humidity: %v%%, wind: %vm/s.",
