@@ -35,7 +35,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 			return
 		} else {
 			if resp, err := commands.Currency(cmdParams[1], cmdParams[2], cmdParams[4]); err != nil {
-				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.Log.Error().Err(err).Msg("failed to handle currency command")
 				app.SendText(evt, "Something went wrong.")
 				return
 			} else {
@@ -46,7 +46,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 
 	case "ping":
 		if resp, err := commands.Ping(); err != nil {
-			app.Log.Error().Err(err).Msg("Failed to handle Ping command")
+			app.Log.Error().Err(err).Msg("failed to handle ping command")
 			app.SendText(evt, "Something went wrong.")
 			return
 		} else {
@@ -57,7 +57,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 	case "random":
 		if msgLen == 2 && cmdParams[1] == "xkcd" {
 			if resp, err := commands.RandomXkcd(); err != nil {
-				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.Log.Error().Err(err).Msg("failed to handle random->xkcd command")
 				app.SendText(evt, "Something went wrong.")
 				return
 			} else {
@@ -69,7 +69,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 	case "xkcd":
 		if msgLen == 2 && cmdParams[1] == "random" {
 			if resp, err := commands.RandomXkcd(); err != nil {
-				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.Log.Error().Err(err).Msg("failed to handle xkcd->randomXkcd command")
 				app.SendText(evt, "Something went wrong.")
 				return
 			} else {
@@ -78,7 +78,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 			}
 		} else if msgLen == 1 {
 			if resp, err := commands.Xkcd(); err != nil {
-				app.Log.Error().Err(err).Msg("Failed to handle Xkcd command")
+				app.Log.Error().Err(err).Msg("failed to handle xkcd command")
 				app.SendText(evt, "Something went wrong.")
 				return
 			} else {
