@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/chzyer/readline"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 
@@ -27,21 +28,23 @@ import (
 	"maunium.net/go/mautrix/id"
 )
 
-var homeserver = flag.String("homeserver", "", "Matrix homeserver")
-var username = flag.String("username", "", "Matrix username localpart")
-var password = flag.String("password", "", "Matrix password")
-var database = flag.String("database", "mautrix-example.db", "SQLite database path")
 var debug = flag.Bool("debug", false, "Enable debug logs")
+
+//var database = flag.String("database", "test.db", "SQLite database path")
 
 func main() {
 	flag.Parse()
-	if *username == "" || *password == "" || *homeserver == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		flag.PrintDefaults()
-		os.Exit(1)
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
 	}
 
-	client, err := mautrix.NewClient(*homeserver, "", "")
+	homeserver := os.Getenv("MATRIX_HOMESERVER")
+	username := os.Getenv("MATRIX_USERNAME")
+	password := os.Getenv("MATRIX_PASSWORD")
+	database := os.Getenv("SQLITE_DATABASE")
+
+	client, err := mautrix.NewClient(homeserver, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -91,7 +94,7 @@ func main() {
 		}
 	})
 
-	cryptoHelper, err := cryptohelper.NewCryptoHelper(client, []byte("meow"), *database)
+	cryptoHelper, err := cryptohelper.NewCryptoHelper(client, []byte("meow"), database)
 	if err != nil {
 		panic(err)
 	}
@@ -103,8 +106,8 @@ func main() {
 	// You don't need to set a device ID in LoginAs because the crypto helper will set it for you if necessary.
 	cryptoHelper.LoginAs = &mautrix.ReqLogin{
 		Type:       mautrix.AuthTypePassword,
-		Identifier: mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: *username},
-		Password:   *password,
+		Identifier: mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: username},
+		Password:   password,
 	}
 	// If you want to use multiple clients with the same DB, you should set a distinct database account ID for each one.
 	//cryptoHelper.DBAccountID = ""

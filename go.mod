@@ -4,7 +4,8 @@ go 1.20
 
 require (
 	github.com/chzyer/readline v1.5.1
-	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/joho/godotenv v1.5.1
+	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/rs/zerolog v1.31.0
 	maunium.net/go/mautrix v0.16.3-0.20231215142331-753cdb2e1cb0
 )
