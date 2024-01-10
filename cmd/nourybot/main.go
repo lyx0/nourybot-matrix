@@ -32,6 +32,11 @@ var debug = flag.Bool("debug", false, "Enable debug logs")
 
 //var database = flag.String("database", "test.db", "SQLite database path")
 
+type Application struct {
+	MatrixClient *mautrix.Client
+	Log          zerolog.Logger
+}
+
 func main() {
 	flag.Parse()
 	err := godotenv.Load()
@@ -48,6 +53,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	rl, err := readline.New("[no room]> ")
 	if err != nil {
 		panic(err)
@@ -62,22 +68,34 @@ func main() {
 	}
 	client.Log = log
 
+	app := &Application{
+		MatrixClient: client,
+		Log:          log,
+	}
 	var lastRoomID id.RoomID
 
-	syncer := client.Syncer.(*mautrix.DefaultSyncer)
+	syncer := app.MatrixClient.Syncer.(*mautrix.DefaultSyncer)
 	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, evt *event.Event) {
 		lastRoomID = evt.RoomID
 		rl.SetPrompt(fmt.Sprintf("%s> ", lastRoomID))
-		log.Info().
-			Str("sender", evt.Sender.String()).
-			Str("type", evt.Type.String()).
-			Str("id", evt.ID.String()).
-			Str("body", evt.Content.AsMessage().Body).
-			Msg("Received message")
+		if evt.Content.AsMessage().Body[:1] == "!" {
+			app.Log.Info().
+				Str("sender", evt.Sender.String()).
+				Str("type", evt.Type.String()).
+				Str("id", evt.ID.String()).
+				Str("body", evt.Content.AsMessage().Body).
+				Msg("Received  xdddddddddddddddddddddddd message")
+
+			app.ParseCommand(evt)
+			return
+		} else {
+			app.ParseEvent(evt)
+			return
+		}
 	})
 	syncer.OnEventType(event.StateMember, func(source mautrix.EventSource, evt *event.Event) {
-		if evt.GetStateKey() == client.UserID.String() && evt.Content.AsMember().Membership == event.MembershipInvite {
-			_, err := client.JoinRoomByID(context.TODO(), evt.RoomID)
+		if evt.GetStateKey() == app.MatrixClient.UserID.String() && evt.Content.AsMember().Membership == event.MembershipInvite {
+			_, err := app.MatrixClient.JoinRoomByID(context.TODO(), evt.RoomID)
 			if err == nil {
 				lastRoomID = evt.RoomID
 				rl.SetPrompt(fmt.Sprintf("%s> ", lastRoomID))
@@ -92,9 +110,10 @@ func main() {
 					Msg("Failed to join room after invite")
 			}
 		}
+
 	})
 
-	cryptoHelper, err := cryptohelper.NewCryptoHelper(client, []byte("meow"), database)
+	cryptoHelper, err := cryptohelper.NewCryptoHelper(app.MatrixClient, []byte("meow"), database)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +135,7 @@ func main() {
 		panic(err)
 	}
 	// Set the client crypto helper in order to automatically encrypt outgoing messages
-	client.Crypto = cryptoHelper
+	app.MatrixClient.Crypto = cryptoHelper
 
 	log.Info().Msg("Now running")
 	syncCtx, cancelSync := context.WithCancel(context.Background())
@@ -124,7 +143,7 @@ func main() {
 	syncStopWait.Add(1)
 
 	go func() {
-		err = client.SyncWithContext(syncCtx)
+		err = app.MatrixClient.SyncWithContext(syncCtx)
 		defer syncStopWait.Done()
 		if err != nil && !errors.Is(err, context.Canceled) {
 			panic(err)
@@ -140,7 +159,7 @@ func main() {
 			log.Error().Msg("Wait for an incoming message before sending messages")
 			continue
 		}
-		resp, err := client.SendText(context.TODO(), lastRoomID, line)
+		resp, err := app.MatrixClient.SendText(context.TODO(), lastRoomID, line)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to send event")
 		} else {
@@ -152,5 +171,16 @@ func main() {
 	err = cryptoHelper.Close()
 	if err != nil {
 		log.Error().Err(err).Msg("Error closing database")
+	}
+}
+
+func (app Application) SendText(evt *event.Event, message string) {
+	room := evt.RoomID
+
+	resp, err := app.MatrixClient.SendText(context.TODO(), room, message)
+	if err != nil {
+		app.Log.Error().Err(err).Msg("Failed to send event")
+	} else {
+		app.Log.Info().Str("event_id", resp.EventID.String()).Msg("Event sent")
 	}
 }
