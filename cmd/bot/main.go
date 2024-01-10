@@ -14,7 +14,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/chzyer/readline"
@@ -29,6 +31,7 @@ import (
 )
 
 var debug = flag.Bool("debug", false, "Enable debug logs")
+var database = flag.String("database", "./db/nourybot.db", "SQLite database path")
 
 //var database = flag.String("database", "test.db", "SQLite database path")
 
@@ -47,7 +50,6 @@ func main() {
 	homeserver := os.Getenv("MATRIX_HOMESERVER")
 	username := os.Getenv("MATRIX_USERNAME")
 	password := os.Getenv("MATRIX_PASSWORD")
-	database := os.Getenv("SQLITE_DATABASE")
 
 	client, err := mautrix.NewClient(homeserver, "", "")
 	if err != nil {
@@ -113,7 +115,7 @@ func main() {
 
 	})
 
-	cryptoHelper, err := cryptohelper.NewCryptoHelper(app.MatrixClient, []byte("meow"), database)
+	cryptoHelper, err := cryptohelper.NewCryptoHelper(app.MatrixClient, []byte("meow"), *database)
 	if err != nil {
 		panic(err)
 	}
@@ -136,6 +138,13 @@ func main() {
 	}
 	// Set the client crypto helper in order to automatically encrypt outgoing messages
 	app.MatrixClient.Crypto = cryptoHelper
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		os.Exit(1)
+	}()
 
 	log.Info().Msg("Now running")
 	syncCtx, cancelSync := context.WithCancel(context.Background())
