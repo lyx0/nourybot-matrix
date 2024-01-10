@@ -32,7 +32,7 @@ var debug = flag.Bool("debug", false, "Enable debug logs")
 
 //var database = flag.String("database", "test.db", "SQLite database path")
 
-type Application struct {
+type application struct {
 	MatrixClient *mautrix.Client
 	Log          zerolog.Logger
 }
@@ -68,7 +68,7 @@ func main() {
 	}
 	client.Log = log
 
-	app := &Application{
+	app := &application{
 		MatrixClient: client,
 		Log:          log,
 	}
@@ -174,7 +174,7 @@ func main() {
 	}
 }
 
-func (app Application) SendText(evt *event.Event, message string) {
+func (app *application) SendText(evt *event.Event, message string) {
 	room := evt.RoomID
 
 	resp, err := app.MatrixClient.SendText(context.TODO(), room, message)

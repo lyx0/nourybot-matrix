@@ -6,7 +6,7 @@ import (
 	"maunium.net/go/mautrix/event"
 )
 
-func (app *Application) ParseCommand(evt *event.Event) {
+func (app *application) ParseCommand(evt *event.Event) {
 	// commandName is the actual name of the command without the prefix.
 	// e.g. `!ping` would be `ping`.
 	//commandName := strings.ToLower(strings.SplitN(evt.Content.AsMessage().Body, " ", 2)[0][1:])
@@ -27,5 +27,7 @@ func (app *Application) ParseCommand(evt *event.Event) {
 	case "!xd":
 		app.SendText(evt, "xd !")
 		return
+
+	case "!yaf":
 	}
 }
