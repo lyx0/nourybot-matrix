@@ -28,6 +28,9 @@ func (app *application) ParseCommand(evt *event.Event) {
 	case "xd":
 		app.SendText(evt, "xd !")
 		return
+	case "gofile":
+		app.NewDownload("gofile", evt, cmdParams[1])
+		return
 	case "yaf":
 		app.NewDownload("yaf", evt, cmdParams[1])
 		return
