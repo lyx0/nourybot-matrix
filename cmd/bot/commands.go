@@ -9,7 +9,7 @@ import (
 func (app *application) ParseCommand(evt *event.Event) {
 	// commandName is the actual name of the command without the prefix.
 	// e.g. `!ping` would be `ping`.
-	//commandName := strings.ToLower(strings.SplitN(evt.Content.AsMessage().Body, " ", 2)[0][1:])
+	commandName := strings.ToLower(strings.SplitN(evt.Content.AsMessage().Body, " ", 2)[0][1:])
 
 	// cmdParams are additional command parameters.
 	// e.g. `!weather san antonio`
@@ -23,11 +23,13 @@ func (app *application) ParseCommand(evt *event.Event) {
 
 	app.Log.Info().Msgf("Command: %s", evt.Content.AsMessage().Body)
 
-	switch evt.Content.AsMessage().Body {
-	case "!xd":
+	//message := evt.Content.AsMessage().Body
+	switch commandName {
+	case "xd":
 		app.SendText(evt, "xd !")
 		return
-
-	case "!yaf":
+	case "yaf":
+		app.NewDownload("yaf", evt, cmdParams[1])
+		return
 	}
 }
