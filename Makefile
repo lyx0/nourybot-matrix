@@ -2,7 +2,7 @@ BINARY_NAME=Nourybot-Matrix.out
 
 dev:
 	go build -o ${BINARY_NAME} cmd/bot/*
-	./${BINARY_NAME} --database "./db/nourybot.db"
+	./${BINARY_NAME} 
 
 build:
 	go build -o ${BINARY_NAME} cmd/bot/*

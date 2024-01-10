@@ -48,7 +48,7 @@ func (app *application) YafDownload(evt *event.Event, link, uuid string) {
 
 	// For some reason youtube links return webm as result.Info.Ext but
 	// are in reality mp4.
-	if strings.HasPrefix(link, "https://www.youtube.com/") {
+	if strings.HasPrefix(link, "https://www.youtube.com/") || strings.HasPrefix(link, "https://youtu.be/") {
 		rExt = "mp4"
 	} else {
 		rExt = result.Info.Ext
@@ -88,7 +88,7 @@ func (app *application) GofileDownload(evt *event.Event, link string) {
 	}
 	// For some reason youtube links return webm as result.Info.Ext but
 	// are in reality mp4.
-	if strings.HasPrefix(link, "https://www.youtube.com/") {
+	if strings.HasPrefix(link, "https://www.youtube.com/") || strings.HasPrefix(link, "https://youtu.be/") {
 		rExt = "mp4"
 	} else {
 		rExt = result.Info.Ext
