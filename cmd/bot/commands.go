@@ -67,6 +67,13 @@ func (app *application) ParseCommand(evt *event.Event) {
 			return
 		}
 
+	case "wa":
+		if msgLen < 2 {
+			reply = "Not enough arguments provided. Usage: !wa [query]"
+		} else {
+			reply = commands.WolframAlphaQuery(evt.Content.AsMessage().Body[4:len(evt.Content.AsMessage().Body)])
+		}
+
 	}
 	if reply != "" {
 		app.SendText(evt, reply)
