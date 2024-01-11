@@ -2,7 +2,11 @@ BINARY_NAME=Nourybot-Matrix.out
 
 dev:
 	go build -o ${BINARY_NAME} cmd/bot/*
-	./${BINARY_NAME} 
+	./${BINARY_NAME} --env="dev"
+
+prod:
+	go build -o ${BINARY_NAME} cmd/bot/*
+	./${BINARY_NAME} --env="prod"
 
 build:
 	go build -o ${BINARY_NAME} cmd/bot/*
