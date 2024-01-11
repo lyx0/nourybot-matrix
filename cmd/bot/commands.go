@@ -45,6 +45,20 @@ func (app *application) ParseCommand(evt *event.Event) {
 			return
 		}
 
+	case "lastfm":
+		if msgLen == 1 {
+			reply = "Not enough arguments provided. Usage: ()lastfm <username>"
+		} else {
+			reply = commands.LastFmUserRecent(cmdParams[1], app.Log)
+		}
+
+	case "phonetic":
+		if msgLen == 1 {
+			reply = "Not enough arguments provided. Usage: ()phonetic <text to translate>"
+		} else {
+			reply, _ = commands.Phonetic(evt.Content.AsMessage().Body[10:len(evt.Content.AsMessage().Body)])
+		}
+
 	case "preview":
 		if msgLen < 2 {
 			reply = "Not enough arguments provided. Usage: !preview [stream]"
