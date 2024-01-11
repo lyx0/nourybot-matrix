@@ -31,8 +31,16 @@ import (
 )
 
 var debug = flag.Bool("debug", false, "Enable debug logs")
+var env = flag.String("env", "dev", "Environment to run in (dev/prod)")
 
-//var database = flag.String("database", "test.db", "SQLite database path")
+// var database = flag.String("database", "test.db", "SQLite database path")
+type config struct {
+	homeserver    string
+	username      string
+	password      string
+	database      string
+	db_account_id string
+}
 
 type application struct {
 	MatrixClient *mautrix.Client
@@ -40,18 +48,28 @@ type application struct {
 }
 
 func main() {
+	var cfg config
 	flag.Parse()
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
 	}
 
-	homeserver := os.Getenv("MATRIX_HOMESERVER")
-	username := os.Getenv("MATRIX_USERNAME")
-	password := os.Getenv("MATRIX_PASSWORD")
-	database := os.Getenv("SQLITE_DATABASE")
+	if *env == "prod" {
+		cfg.homeserver = os.Getenv("PROD_MATRIX_HOMESERVER")
+		cfg.username = os.Getenv("PROD_MATRIX_USERNAME")
+		cfg.password = os.Getenv("PROD_MATRIX_PASSWORD")
+		cfg.database = os.Getenv("PROD_SQLITE_DATABASE")
+		cfg.db_account_id = os.Getenv("PROD_DB_ACCOUNT_ID")
+	} else {
+		cfg.homeserver = os.Getenv("DEV_MATRIX_HOMESERVER")
+		cfg.username = os.Getenv("DEV_MATRIX_USERNAME")
+		cfg.password = os.Getenv("DEV_MATRIX_PASSWORD")
+		cfg.database = os.Getenv("DEV_SQLITE_DATABASE")
+		cfg.db_account_id = os.Getenv("DEV_DB_ACCOUNT_ID")
+	}
 
-	client, err := mautrix.NewClient(homeserver, "", "")
+	client, err := mautrix.NewClient(cfg.homeserver, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +133,7 @@ func main() {
 
 	})
 
-	cryptoHelper, err := cryptohelper.NewCryptoHelper(app.MatrixClient, []byte("meow"), database)
+	cryptoHelper, err := cryptohelper.NewCryptoHelper(app.MatrixClient, []byte("meow"), cfg.database)
 	if err != nil {
 		panic(err)
 	}
@@ -127,11 +145,11 @@ func main() {
 	// You don't need to set a device ID in LoginAs because the crypto helper will set it for you if necessary.
 	cryptoHelper.LoginAs = &mautrix.ReqLogin{
 		Type:       mautrix.AuthTypePassword,
-		Identifier: mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: username},
-		Password:   password,
+		Identifier: mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: cfg.username},
+		Password:   cfg.password,
 	}
 	// If you want to use multiple clients with the same DB, you should set a distinct database account ID for each one.
-	//cryptoHelper.DBAccountID = ""
+	cryptoHelper.DBAccountID = cfg.db_account_id
 	err = cryptoHelper.Init()
 	if err != nil {
 		panic(err)
