@@ -81,6 +81,14 @@ func (app *application) ParseCommand(evt *event.Event) {
 			return
 		}
 
+	case "conv":
+		if msgLen < 2 {
+			reply = "Not enough arguments provided. Usage: !gofile [link]"
+		} else {
+			app.ConvertToMP4(evt, cmdParams[1])
+			return
+		}
+
 	case "wa":
 		if msgLen < 2 {
 			reply = "Not enough arguments provided. Usage: !wa [query]"

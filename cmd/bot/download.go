@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"github.com/wader/goutubedl"
 	"maunium.net/go/mautrix/event"
 )
@@ -32,6 +33,62 @@ func (app *application) NewDownload(destination string, evt *event.Event, link s
 	case "gofile":
 		app.GofileDownload(evt, link)
 	}
+}
+
+func (app *application) ConvertToMP4(evt *event.Event, link string) {
+	fName := "in"
+	goutubedl.Path = "yt-dlp"
+	var rExt string
+
+	app.SendText(evt, "Downloading...")
+	result, err := goutubedl.New(context.Background(), link, goutubedl.Options{})
+	if err != nil {
+		app.Log.Error().Err(err).Msg("Failed to download")
+		app.SendText(evt, fmt.Sprintf("Something went wrong FeelsBadMan: %q", err))
+		return
+	}
+
+	// For some reason youtube links return webm as result.Info.Ext but
+	// are in reality mp4.
+	if strings.HasPrefix(link, "https://www.youtube.com/") || strings.HasPrefix(link, "https://youtu.be/") {
+		rExt = "mp4"
+	} else {
+		rExt = result.Info.Ext
+	}
+
+	downloadResult, err := result.Download(context.TODO(), "best")
+	if err != nil {
+		app.Log.Error().Err(err).Msg("Failed to download")
+		app.SendText(evt, fmt.Sprintf("Something went wrong FeelsBadMan: %q", err))
+		return
+	}
+	defer downloadResult.Close()
+
+	fileName := fmt.Sprintf("%s.%s", fName, rExt)
+	f, err := os.Create(fileName)
+	if err != nil {
+		app.Log.Error().Err(err).Msg("Failed to download")
+		app.SendText(evt, fmt.Sprintf("Something went wrong FeelsBadMan: %q", err))
+		return
+	}
+	defer f.Close()
+	io.Copy(f, downloadResult)
+
+	out := "out.mp4"
+	fn, err := os.Create(out)
+	if err != nil {
+		app.Log.Error().Err(err).Msg("Failed to download")
+		app.SendText(evt, fmt.Sprintf("Something went wrong FeelsBadMan: %q", err))
+		return
+	}
+	defer fn.Close()
+
+	err = ffmpeg.Input(fileName).
+		Output(out).
+		OverWriteOutput().ErrorToStdOut().Run()
+	defer os.Remove(fileName)
+
+	app.NewUpload("yaf", evt, out)
 }
 
 func (app *application) YafDownload(evt *event.Event, link, uuid string) {
