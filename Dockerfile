@@ -17,5 +17,5 @@ RUN go get -d -v ./...
 Run go build -o "Nourybot.out" ./cmd/bot
 
 # Run the executable
-CMD [ "./Nourybot.out", "--database", "nourybot.db" ]
+CMD [ "./Nourybot.out" ]
 

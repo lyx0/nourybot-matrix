@@ -95,6 +95,8 @@ func main() {
 	var lastRoomID id.RoomID
 
 	syncer := app.MatrixClient.Syncer.(*mautrix.DefaultSyncer)
+	syncer.OnSync(app.MatrixClient.DontProcessOldEvents)
+	//app.MatrixClient.Syncer.(mautrix.ExtensibleSyncer).OnSync(app.MatrixClient.DontProcessOldEvents)
 	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, evt *event.Event) {
 		lastRoomID = evt.RoomID
 		rl.SetPrompt(fmt.Sprintf("%s> ", lastRoomID))
